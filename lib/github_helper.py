@@ -22,7 +22,41 @@ def get_repos(repo_names):
 			repos[user.githubname].append(repo)
 	return repos
 
-def get_latest_commit_comments(pull_request):
+def check_pulls(pull_requests):
+	for pull_request in pull_requests:
+		if not isinstance(pull_request, PullRequest.PullRequest):
+			print 'Incorrect type found for pull_request'
+			return
+		print '============================================================================'
+		print pull_request.title
+		print '============================================================================'
+		print pull_request.html_url
+		print # Empty line
+		plus_ones = 0
+		plus_oners = []
+		comments = _get_latest_commit_comments(pull_request)
+		for comment in comments:
+			if '+1' in comment.body:
+				plus_ones += 1
+				plus_oners.append(comment.user.login)
+		addition = (' by ' + ', '.join(plus_oners)) if plus_ones else ''
+		print 'Pull request has {0} +1s{1}'.format(plus_ones, addition)
+		if plus_ones < 3:
+			do_not_notify = list(set([commit.author.login for commit in pull_request.get_commits()]))
+			do_not_notify = do_not_notify + plus_oners
+			_add_pending_notification(pull_request, (3 - plus_ones), do_not_notify)
+		print # Empty line
+
+def process_pending_notifications():
+	global pending_notifications
+	grouped_notification = '\n\n============================\n\n'.join(pending_notifications)
+	pending_notifications = set()
+	print 'Processing pending notifications:'
+	print # Empty line
+	print grouped_notification
+	send_message(grouped_notification)
+
+def _get_latest_commit_comments(pull_request):
 	latest_commit = next(pr for pr in pull_request.get_commits().reversed)
 	print 'Latest commit:'
 	print '\tSHA:', latest_commit.sha
@@ -45,7 +79,7 @@ def get_latest_commit_comments(pull_request):
 		print # Empty line
 	return comments
 
-def add_pending_notification(pull_request, required_plus_ones, do_not_notify):
+def _add_pending_notification(pull_request, required_plus_ones, do_not_notify):
 	global pending_notifications
 	do_notify = [user.slacktag for user in USERS if user.githubname not in do_not_notify]
 	print 'Adding pending slack notification to', ', '.join(do_notify)
@@ -54,38 +88,3 @@ def add_pending_notification(pull_request, required_plus_ones, do_not_notify):
 	message = '{0}\n{1}\nNeeds {2} +1s\nAttn: {3}'.format(title, url, required_plus_ones, ', '.join([slacktag for slacktag in do_notify]))
 	print # Empty line
 	pending_notifications.add(message)
-
-def process_pending_notifications():
-	global pending_notifications
-	grouped_notification = '\n\n============================\n\n'.join(pending_notifications)
-	pending_notifications = set()
-	print 'Processing pending notifications:'
-	print # Empty line
-	print grouped_notification
-	send_message(grouped_notification)
-
-def check_pulls(pull_requests):
-	for pull_request in pull_requests:
-		if not isinstance(pull_request, PullRequest.PullRequest):
-			print 'Incorrect type found for pull_request'
-			return
-		print '============================================================================'
-		print pull_request.title
-		print '============================================================================'
-		print pull_request.html_url
-		print # Empty line
-		plus_ones = 0
-		plus_oners = []
-		comments = get_latest_commit_comments(pull_request)
-		for comment in comments:
-			if '+1' in comment.body:
-				plus_ones += 1
-				plus_oners.append(comment.user.login)
-		addition = (' by ' + ', '.join(plus_oners)) if plus_ones else ''
-		print 'Pull request has {0} +1s{1}'.format(plus_ones, addition)
-		if plus_ones < 3:
-			do_not_notify = list(set([commit.author.login for commit in pull_request.get_commits()]))
-			do_not_notify = do_not_notify + plus_oners
-			add_pending_notification(pull_request, (3 - plus_ones), do_not_notify)
-		print # Empty line
-	process_pending_notifications()
