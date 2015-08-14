@@ -78,7 +78,17 @@ def _get_latest_commit_comments(pull_request):
 	that have occurred since.
 	"""
 
-	latest_commit = next(pr for pr in pull_request.get_commits().reversed)
+	pull_commits = pull_request.get_commits().reversed
+	latest_commit = None
+	for commit in pull_commits:
+		if not _is_master_merge_commit(pull_request.base.sha, commit):
+			latest_commit = commit
+			break
+		else:
+			print commit.sha, 'is master merge. Moving on.'
+	if not latest_commit:
+		print 'No non-master-merge commits found'
+		return
 	print 'Latest commit:'
 	print '\tSHA:', latest_commit.sha
 	print '\tCreated:', latest_commit.commit.author.date
@@ -119,3 +129,10 @@ def _add_pending_notification(pull_request, required_plus_ones, do_not_notify):
 	message = '{0}\n{1}\nNeeds {2} +1s\nAttn: {3}'.format(title, url, required_plus_ones, ', '.join([slacktag for slacktag in do_notify]))
 	print # Empty line
 	pending_notifications.add(message)
+
+def _is_master_merge_commit(base_sha, commit):
+	is_merge_commit = len(commit.parents) > 1
+	if not is_merge_commit:
+		return False
+	parent_shas = [c.sha for c in commit.parents]
+	return base_sha in parent_shas
