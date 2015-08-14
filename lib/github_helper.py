@@ -11,7 +11,13 @@ PR_STATE_ALL = 'all'
 g = Github(GITHUB_USERNAME, GITHUB_PASSWORD)
 pending_notifications = set()
 
+
 def get_repos(repo_names):
+	""" Get each repo in repo_names for each user in settings.USERS
+	
+	Return: {"github_username": [github.Repository.Repository]}
+	"""
+
 	repos = defaultdict(list)
 	for user in USERS:
 		for repo_name in repo_names:
@@ -22,7 +28,12 @@ def get_repos(repo_names):
 			repos[user.githubname].append(repo)
 	return repos
 
+
 def check_pulls(pull_requests):
+	""" Check each pull in pull_requests to verify that it has 3 +1s
+	after the latest commit. If not, add a pending Slack notification.
+	"""
+
 	for pull_request in pull_requests:
 		if not isinstance(pull_request, PullRequest.PullRequest):
 			print 'Incorrect type found for pull_request'
@@ -47,7 +58,12 @@ def check_pulls(pull_requests):
 			_add_pending_notification(pull_request, (3 - plus_ones), do_not_notify)
 		print # Empty line
 
+
 def process_pending_notifications():
+	""" Consolidate global pending_notifications list and separate by
+	========================. Send consolidate message to Slack room.
+	"""
+
 	global pending_notifications
 	grouped_notification = '\n\n============================\n\n'.join(pending_notifications)
 	pending_notifications = set()
@@ -56,7 +72,12 @@ def process_pending_notifications():
 	print grouped_notification
 	send_message(grouped_notification)
 
+
 def _get_latest_commit_comments(pull_request):
+	""" Get the latest commit from pull_request and return comments
+	that have occurred since.
+	"""
+
 	latest_commit = next(pr for pr in pull_request.get_commits().reversed)
 	print 'Latest commit:'
 	print '\tSHA:', latest_commit.sha
@@ -79,7 +100,17 @@ def _get_latest_commit_comments(pull_request):
 		print # Empty line
 	return comments
 
+
 def _add_pending_notification(pull_request, required_plus_ones, do_not_notify):
+	""" Add a message to the global pending_notifications list
+	of the format:
+
+	Pull Title
+	Pull URL
+	Needs (X) +1s
+	Attn: @users who haven't +1d
+	"""
+
 	global pending_notifications
 	do_notify = [user.slacktag for user in USERS if user.githubname not in do_not_notify]
 	print 'Adding pending slack notification to', ', '.join(do_notify)
