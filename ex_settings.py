@@ -1,6 +1,7 @@
 from lib import User
 
 USERS = [User('Real Name', 'slack username', 'github username')]
+REPOS = ['repository', 'names']
 
 # Slack Settings
 SLACK_TOKEN = 'token'
