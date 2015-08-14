@@ -1,7 +1,7 @@
 from collections import defaultdict
 from github import Github
 from github import PullRequest
-from settings import GITHUB_USERNAME, GITHUB_PASSWORD, USERS
+from settings import GITHUB_USERNAME, GITHUB_PASSWORD, REPOS, USERS
 from slack_helper import send_message
 
 PR_STATE_OPEN = 'open'
@@ -10,6 +10,15 @@ PR_STATE_ALL = 'all'
 
 g = Github(GITHUB_USERNAME, GITHUB_PASSWORD)
 pending_notifications = set()
+
+
+def check_repos():
+	repos = get_repos(REPOS)
+	for githubname in repos:
+		for repo in repos.get(githubname):
+			open_pulls = repo.get_pulls(state=PR_STATE_OPEN)
+			check_pulls(open_pulls)
+	process_pending_notifications()
 
 
 def get_repos(repo_names):
