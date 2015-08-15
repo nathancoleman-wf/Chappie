@@ -1,6 +1,7 @@
 from lib import User
 
-USERS = [User('Real Name', 'slack username', 'github username')]
+USERS = [User('Chappie', 'chappie', ''), # Leave this line. Chappie must be the first user
+		 User('Real Name', 'slack username', 'github username')]
 REPOS = ['repository', 'names']
 
 # Slack Settings
