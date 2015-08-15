@@ -82,11 +82,11 @@ class Chappie:
 		elif self.CMD_SPEAK in command:
 			self.speak()
 		
-		elif self.CMD_IGNORE in command:
-			self.ignore(slack_id)
-
 		elif self.CMD_UNIGNORE in command:
 			self.stop_ignoring(slack_id)
+		
+		elif self.CMD_IGNORE in command:
+			self.ignore(slack_id)
 
 	#===================================
 	#	Commands
