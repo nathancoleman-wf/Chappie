@@ -24,4 +24,5 @@ member's pull request.
     - @Chappie private = message privately instead of in channel
 - Give Chappie the ability to handle multiple rooms
 - Parse commits in PR until non-master-merge commit is found (currently fails if more than 1 master-merge in a row)
-- Add movie quotes for Chappie!
+- Use decorators and RegEx matching for response functions
+- Build out plugin architecture
