@@ -34,3 +34,10 @@ class User:
 	@property
 	def slackidtag(self):
 		return '@' + self.slack_id if self.slack_id else ''
+
+
+class Command:
+	def __init__(self, identifier, help_description, callback=None):
+		self.identifier = identifier
+		self.help_description = help_description
+		self.callback = callback

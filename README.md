@@ -22,6 +22,7 @@ member's pull request.
     - @Chappie ignore = 24 hours of no tagging
     - @Chappie add user
     - @Chappie private = message privately instead of in channel
+    - @Chappie leave = exit the current channel/room
 - Give Chappie the ability to handle multiple rooms
 - Parse commits in PR until non-master-merge commit is found (currently fails if more than 1 master-merge in a row)
 - Use decorators and RegEx matching for response functions

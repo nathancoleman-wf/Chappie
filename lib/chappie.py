@@ -3,9 +3,14 @@ import random
 import github_helper
 from datetime import datetime
 import slack_helper
-import utils
+from . import Command
 
 class Chappie:
+
+	commands = [Command('identify', 'Chappie will introduce himself'),
+				Command('ignore', 'Chappie will not tag you for the rest of the day'),
+				Command('unignore', 'Chappie will resume tagging you if you have previously used the \'ignore\' command'),
+				Command('speak', 'Chappie will say something random (and usually entertaining)')]
 
 	CMD_IDENTIFY = 'identify'
 	MSG_IDENTIFY = 'I am Chappie!'
@@ -26,6 +31,10 @@ class Chappie:
 				 "Why did you build me to die maker?",
 				 "I'm scared.",
 				 "Now we are both black sheep, mommy."]
+
+	CMD_HELP = 'help'
+
+	MSG_UNKNOWN = 'Chappie doesn\'t know that command, {0}.\nTell Chappie to \'help\' if you would like help.'
 
 	def __init__(self, user_object, check_messages_interval, check_pull_requests_interval):
 		self.user_object = user_object
@@ -68,54 +77,78 @@ class Chappie:
 				return
 			print 'Chappie received a message!'
 			command = text[text.find(' '):].lower()
-			self.process_command(text, message.get(slack_helper.MSG_PROP_USER))
+			self.process_command(text, message.get(slack_helper.MSG_PROP_USER), message.get(slack_helper.MSG_PROP_CHANNEL))
 
 	def is_chappie_command(self, message_text):
 		return message_text.startswith('<{0}>'.format(self.user_object.slackidtag))
 
-	def process_command(self, command, slack_id):
-		print 'Processing command', command
+	def process_command(self, command, slack_id, channel):
+		print 'Processing command {0} in channel {1}'.format(command, channel)
 
 		if self.CMD_IDENTIFY in command:
-			self.identify()
+			self.identify(channel)
 
 		elif self.CMD_SPEAK in command:
-			self.speak()
+			self.speak(channel)
 		
 		elif self.CMD_UNIGNORE in command:
-			self.stop_ignoring(slack_id)
+			self.stop_ignoring(slack_id, channel)
 		
 		elif self.CMD_IGNORE in command:
-			self.ignore(slack_id)
+			self.ignore(slack_id, channel)
+
+		elif self.CMD_HELP in command:
+			self.help(channel)
+
+		else:
+			self.unknown(slack_id, channel)
 
 	#===================================
 	#	Commands
 	#===================================
 
-	def identify(self):
-		slack_helper.send_message(self.MSG_IDENTIFY)
+	def identify(self, channel):
+		# slack_helper.send_message(self.MSG_IDENTIFY)
+		slack_helper.client.rtm_send_message(channel, self.MSG_IDENTIFY)
 
-	def ignore(self, slack_id):
+	def ignore(self, slack_id, channel):
 		user = slack_helper.user_from_slack_id(slack_id)
 		if not user:
 			print 'No user. Ignore failed.'
 			return
 		if self.ignore_list.get(user.slackname) is not None:
 			print 'User already on ignore_list'
-			slack_helper.send_message(self.MSG_PREV_IGNORED.format(user.firstname))
+			# slack_helper.send_message(self.MSG_PREV_IGNORED.format(user.firstname))
+			slack_helper.client.rtm_send_message(channel, self.MSG_PREV_IGNORED.format(user.firstname))
 			return
 		self.ignore_list[user.slackname] = datetime.now()
 		print 'Adding {0} to the ignore list'.format(user.slackname)
-		slack_helper.send_message(self.MSG_IGNORE.format(user.firstname))
+		# slack_helper.send_message(self.MSG_IGNORE.format(user.firstname))
+		slack_helper.client.rtm_send_message(channel, self.MSG_IGNORE.format(user.firstname))
 
-	def stop_ignoring(self, slack_id):
+	def stop_ignoring(self, slack_id, channel):
 		user = slack_helper.user_from_slack_id(slack_id)
 		if not user:
 			print 'No user. Unignore gailed.'
 			return
 		self.ignore_list[user.slackname] = None
 		print 'Removing {0} from the ignore list'.format(user.slackname)
-		slack_helper.send_message(self.MSG_UNIGNORE.format(user.firstname))
+		# slack_helper.send_message(self.MSG_UNIGNORE.format(user.firstname))
+		slack_helper.client.rtm_send_message(channel, self.MSG_UNIGNORE.format(user.firstname))
 
-	def speak(self):
-		slack_helper.send_message(random.choice(self.MSG_SPEAK))
+	def speak(self, channel):
+		# slack_helper.send_message(random.choice(self.MSG_SPEAK))
+		slack_helper.client.rtm_send_message(channel, random.choice(self.MSG_SPEAK))
+
+	def help(self, channel):
+		message = ''
+		for command in self.commands:
+			message += '{0}\t\t{1}\n'.format(command.identifier, command.help_description)
+		slack_helper.client.rtm_send_message(channel, message)
+
+	def unknown(self, slack_id, channel):
+		user = slack_helper.user_from_slack_id(slack_id)
+		if not user:
+			print 'No user'
+			return
+		slack_helper.client.rtm_send_message(channel, self.MSG_UNKNOWN.format('<@' + slack_id + '>'))

@@ -3,6 +3,7 @@ from slackclient import SlackClient
 
 EVENT_PROP_TYPE = 'type'
 EVENT_TYPE_MESSAGE = 'message'
+MSG_PROP_CHANNEL = 'channel'
 MSG_PROP_TEXT = 'text'
 MSG_PROP_USER = 'user'
 
