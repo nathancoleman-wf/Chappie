@@ -37,7 +37,6 @@ class User:
 
 
 class Command:
-	def __init__(self, identifier, help_description, callback=None):
-		self.identifier = identifier
-		self.help_description = help_description
+	def __init__(self, callback, descriptor):
 		self.callback = callback
+		self.descriptor = descriptor
