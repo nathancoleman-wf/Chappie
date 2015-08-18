@@ -5,13 +5,12 @@ member's pull request.
 
 ##### Getting Started
 - Clone this repo
-- Create a virtual environment for Chappie to run in
-- Inside the virtual environment: ```pip install -r requirements.txt```
+- ```make install```
 - Rename ```ex_settings.py``` to ```settings.py```
 - Create a channel in Slack for Chappie to post to
 - Create a bot integration in [Slack](https://api.slack.com/bot-users) (this will give you a token for the next step)
 - Add missing information to ```settings.py``` including your team members and credentials for Slack/GitHub
-- ```python main.py```
+- ```make run```
 
 ##### References
 - http://jacquev6.net/PyGithub/v1/reference.html
