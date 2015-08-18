@@ -56,8 +56,7 @@ class Chappie:
 			sender_slack_id = message.get(slack_helper.MSG_PROP_USER)
 			channel = message.get(slack_helper.MSG_PROP_CHANNEL)
 			try:
-				self.process_command(text, user_slack_id, channel)
-				raise(Exception, 'There is an exception!')
+				self.process_command(text, sender_slack_id, channel)
 			except Exception, e:
 				print 'Encountered exception:\n\t', e
 				slack_helper.client.rtm_send_message(channel, 'Chappie encountered an error.')
